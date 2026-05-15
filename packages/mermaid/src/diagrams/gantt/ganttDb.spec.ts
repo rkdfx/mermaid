@@ -542,4 +542,30 @@ describe('when using the ganttDb', function () {
     // Second task will be parsed as year 202 (fallback to new Date())
     expect(tasks[1].startTime.getFullYear()).toBe(202);
   });
+
+  describe('vertical markers (issue #7564)', function () {
+    it('should not consume a row order slot', function () {
+      ganttDb.setDateFormat('HH:mm');
+      ganttDb.addSection('s');
+      ganttDb.addTask('Marker', 'vert, v1, 17:30, 2m');
+      ganttDb.addTask('Task A', 't1, 17:30, 3m');
+      ganttDb.addTask('Task B', 't2, 17:33, 8m');
+      const tasks = ganttDb.getTasks();
+      const byId = Object.fromEntries(tasks.map((t) => [t.id, t]));
+      expect(byId.t1.order).toBe(byId.v1.order);
+      expect(byId.t2.order).toBe(byId.t1.order + 1);
+    });
+
+    it('should keep row order stable regardless of vert count', function () {
+      ganttDb.setDateFormat('HH:mm');
+      ganttDb.addSection('s');
+      ganttDb.addTask('Task A', 't1, 17:30, 3m');
+      ganttDb.addTask('M1', 'vert, v1, 17:31, 1m');
+      ganttDb.addTask('M2', 'vert, v2, 17:32, 1m');
+      ganttDb.addTask('M3', 'vert, v3, 17:33, 1m');
+      ganttDb.addTask('Task B', 't2, 17:34, 3m');
+      const byId = Object.fromEntries(ganttDb.getTasks().map((t) => [t.id, t]));
+      expect(byId.t2.order).toBe(byId.t1.order + 1);
+    });
+  });
 });

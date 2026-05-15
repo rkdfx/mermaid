@@ -569,7 +569,10 @@ export const addTask = function (descr, data) {
   rawTask.vert = taskInfo.vert;
   rawTask.order = lastOrder;
 
-  lastOrder++;
+  // Vertical markers are visual overlays and must not occupy a row.
+  if (!rawTask.vert) {
+    lastOrder++;
+  }
 
   const pos = rawTasks.push(rawTask);
 

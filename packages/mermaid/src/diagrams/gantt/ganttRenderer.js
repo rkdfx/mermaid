@@ -111,12 +111,14 @@ export const draw = function (text, id, version, diagObj) {
   }
 
   const taskArray = diagObj.db.getTasks();
+  // Vertical markers are visual overlays — exclude them from row/height layout.
+  const rowTaskArray = taskArray.filter((task) => !task.vert);
 
   // Set height based on number of tasks
 
   let categories = [];
 
-  for (const element of taskArray) {
+  for (const element of rowTaskArray) {
     categories.push(element.type);
   }
 
@@ -126,7 +128,7 @@ export const draw = function (text, id, version, diagObj) {
   let h = 2 * conf.topPadding;
   if (diagObj.db.getDisplayMode() === 'compact' || conf.displayMode === 'compact') {
     const categoryElements = {};
-    for (const element of taskArray) {
+    for (const element of rowTaskArray) {
       if (categoryElements[element.section] === undefined) {
         categoryElements[element.section] = [element];
       } else {
@@ -142,9 +144,9 @@ export const draw = function (text, id, version, diagObj) {
       categoryHeights[category] = categoryHeight;
     }
   } else {
-    h += taskArray.length * (conf.barHeight + conf.barGap);
+    h += rowTaskArray.length * (conf.barHeight + conf.barGap);
     for (const category of categories) {
-      categoryHeights[category] = taskArray.filter((task) => task.type === category).length;
+      categoryHeights[category] = rowTaskArray.filter((task) => task.type === category).length;
     }
   }
 
@@ -313,7 +315,7 @@ export const draw = function (text, id, version, diagObj) {
       })
       .attr('height', function (d) {
         if (d.vert) {
-          return taskArray.length * (conf.barHeight + conf.barGap) + conf.barHeight * 2;
+          return rowTaskArray.length * (conf.barHeight + conf.barGap) + conf.barHeight * 2;
         }
         return theBarHeight;
       })
@@ -422,7 +424,9 @@ export const draw = function (text, id, version, diagObj) {
       .attr('y', function (d, i) {
         // Ignore the incoming i value and use our order instead
         if (d.vert) {
-          return conf.gridLineStartPadding + taskArray.length * (conf.barHeight + conf.barGap) + 60;
+          return (
+            conf.gridLineStartPadding + rowTaskArray.length * (conf.barHeight + conf.barGap) + 60
+          );
         }
         i = d.order;
         return i * theGap + conf.barHeight / 2 + (conf.fontSize / 2 - 2) + theTopPad;
